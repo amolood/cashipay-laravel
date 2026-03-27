@@ -96,44 +96,6 @@ final class CashiPayManagerTest extends TestCase
     }
 
     // ------------------------------------------------------------------ //
-    // verifyWebhookSignature                                               //
-    // ------------------------------------------------------------------ //
-
-    /** @test */
-    public function it_returns_true_when_signature_matches(): void
-    {
-        $secret  = 'test-webhook-secret';
-        $payload = '{"event":"payment.completed","referenceNumber":"REF-001"}';
-        $valid   = hash_hmac('sha256', $payload, $secret);
-
-        $this->assertTrue($this->manager->verifyWebhookSignature($payload, $valid));
-    }
-
-    /** @test */
-    public function it_returns_false_when_signature_does_not_match(): void
-    {
-        $payload = '{"event":"payment.completed","referenceNumber":"REF-001"}';
-
-        $this->assertFalse(
-            $this->manager->verifyWebhookSignature($payload, 'completely-wrong-signature')
-        );
-    }
-
-    /** @test */
-    public function it_returns_true_when_no_secret_is_configured(): void
-    {
-        // Temporarily unset the webhook secret.
-        $this->app['config']->set('cashipay.webhook.secret', null);
-
-        $manager = $this->app->make(CashiPayManager::class);
-
-        $this->assertTrue(
-            $manager->verifyWebhookSignature('any-payload', 'any-signature'),
-            'With no secret configured, signature verification should pass through.'
-        );
-    }
-
-    // ------------------------------------------------------------------ //
     // environment / baseUrl / apiKey                                       //
     // ------------------------------------------------------------------ //
 

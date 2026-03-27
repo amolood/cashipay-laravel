@@ -14,79 +14,6 @@ final class WebhookTest extends TestCase
 {
     private const WEBHOOK_URL = '/cashipay/webhook';
 
-    private const WEBHOOK_SECRET = 'test-webhook-secret';
-
-    // ------------------------------------------------------------------ //
-    // Helpers                                                              //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Compute the correct HMAC-SHA256 signature for a payload.
-     */
-    private function sign(string $payload, string $secret = self::WEBHOOK_SECRET): string
-    {
-        return hash_hmac('sha256', $payload, $secret);
-    }
-
-    /**
-     * POST to the webhook endpoint with an optional signature header.
-     *
-     * @param  array<string, mixed>  $payload
-     * @param  array<string, string>  $headers
-     */
-    private function postWebhook(array $payload, array $headers = []): \Illuminate\Testing\TestResponse
-    {
-        $body = json_encode($payload, JSON_THROW_ON_ERROR);
-
-        $defaultHeaders = [
-            'Content-Type'          => 'application/json',
-            'X-CashiPay-Signature'  => $this->sign($body),
-        ];
-
-        return $this->withHeaders(array_merge($defaultHeaders, $headers))
-            ->postJson(self::WEBHOOK_URL, $payload);
-    }
-
-    // ------------------------------------------------------------------ //
-    // Signature verification                                               //
-    // ------------------------------------------------------------------ //
-
-    /** @test */
-    public function it_returns_401_when_signature_header_is_missing(): void
-    {
-        $this->withHeaders(['Content-Type' => 'application/json'])
-            ->postJson(self::WEBHOOK_URL, ['event' => 'payment.completed'])
-            ->assertStatus(401);
-    }
-
-    /** @test */
-    public function it_returns_401_when_signature_is_invalid(): void
-    {
-        $this->postWebhook(
-            payload: ['event' => 'payment.completed', 'referenceNumber' => 'REF-001'],
-            headers: ['X-CashiPay-Signature' => 'invalid-signature-value'],
-        )->assertStatus(401);
-    }
-
-    /** @test */
-    public function it_passes_through_when_no_webhook_secret_is_configured(): void
-    {
-        $this->app['config']->set('cashipay.webhook.secret', null);
-
-        Event::fake();
-
-        // No signature header — should still be accepted.
-        $this->withHeaders(['Content-Type' => 'application/json'])
-            ->postJson(self::WEBHOOK_URL, [
-                'event'           => 'payment.completed',
-                'referenceNumber' => 'REF-001',
-                'status'          => 'COMPLETED',
-                'merchantOrderId' => 'ORD-001',
-            ])
-            ->assertOk()
-            ->assertJson(['received' => true]);
-    }
-
     // ------------------------------------------------------------------ //
     // PaymentCompleted event                                               //
     // ------------------------------------------------------------------ //
@@ -103,7 +30,7 @@ final class WebhookTest extends TestCase
             'merchantOrderId' => 'ORD-001',
         ];
 
-        $this->postWebhook($payload)
+        $this->postJson(self::WEBHOOK_URL, $payload)
             ->assertOk()
             ->assertJson(['received' => true]);
 
@@ -124,7 +51,7 @@ final class WebhookTest extends TestCase
     {
         Event::fake();
 
-        $this->postWebhook([
+        $this->postJson(self::WEBHOOK_URL, [
             'event'           => 'payment.paid',
             'referenceNumber' => 'REF-002',
             'status'          => 'PAID',
@@ -141,7 +68,7 @@ final class WebhookTest extends TestCase
     {
         Event::fake();
 
-        $this->postWebhook([
+        $this->postJson(self::WEBHOOK_URL, [
             'event'           => 'some.event',
             'referenceNumber' => 'REF-003',
             'status'          => 'APPROVED',
@@ -167,7 +94,7 @@ final class WebhookTest extends TestCase
             'merchantOrderId' => 'ORD-004',
         ];
 
-        $this->postWebhook($payload)
+        $this->postJson(self::WEBHOOK_URL, $payload)
             ->assertOk()
             ->assertJson(['received' => true]);
 
@@ -186,7 +113,7 @@ final class WebhookTest extends TestCase
     {
         Event::fake();
 
-        $this->postWebhook([
+        $this->postJson(self::WEBHOOK_URL, [
             'event'           => 'payment.expired',
             'referenceNumber' => 'REF-005',
             'status'          => 'EXPIRED',
@@ -203,7 +130,7 @@ final class WebhookTest extends TestCase
     {
         Event::fake();
 
-        $this->postWebhook([
+        $this->postJson(self::WEBHOOK_URL, [
             'event'           => 'payment.cancelled',
             'referenceNumber' => 'REF-006',
             'status'          => 'CANCELLED',
@@ -224,14 +151,12 @@ final class WebhookTest extends TestCase
     {
         Event::fake();
 
-        $payload = [
+        $this->postJson(self::WEBHOOK_URL, [
             'event'           => 'payment.processing',
             'referenceNumber' => 'REF-007',
             'status'          => 'PENDING',
             'merchantOrderId' => 'ORD-007',
-        ];
-
-        $this->postWebhook($payload)
+        ])
             ->assertOk()
             ->assertJson(['received' => true]);
 
@@ -241,15 +166,11 @@ final class WebhookTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_200_even_for_empty_payload(): void
+    public function it_returns_200_for_empty_payload(): void
     {
         Event::fake();
 
-        // Bypass signature check since there's no secret context here.
-        $this->app['config']->set('cashipay.webhook.secret', null);
-
-        $this->withHeaders(['Content-Type' => 'application/json'])
-            ->post(self::WEBHOOK_URL, [], ['Content-Type' => 'application/json'])
+        $this->post(self::WEBHOOK_URL, [], ['Content-Type' => 'application/json'])
             ->assertOk()
             ->assertJson(['received' => true]);
     }

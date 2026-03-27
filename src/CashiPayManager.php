@@ -268,27 +268,6 @@ final class CashiPayManager implements CashiPayInterface
 
     /**
      * {@inheritDoc}
-     *
-     * Computes HMAC-SHA256 of the raw payload with the configured secret and
-     * performs a timing-safe comparison against the provided signature.
-     *
-     * Returns true if no webhook secret is configured (pass-through mode).
-     */
-    public function verifyWebhookSignature(string $rawPayload, string $signature): bool
-    {
-        $secret = $this->config->get('cashipay.webhook.secret');
-
-        if (empty($secret)) {
-            return true;
-        }
-
-        $expected = hash_hmac('sha256', $rawPayload, (string) $secret);
-
-        return hash_equals($expected, $signature);
-    }
-
-    /**
-     * {@inheritDoc}
      */
     public function isCompletedStatus(?string $status): bool
     {

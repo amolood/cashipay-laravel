@@ -6,11 +6,9 @@ namespace DigitalizeLab\CashiPay;
 
 use DigitalizeLab\CashiPay\Console\InstallCommand;
 use DigitalizeLab\CashiPay\Contracts\CashiPayInterface;
-use DigitalizeLab\CashiPay\Http\Middleware\VerifyWebhookSignature;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Client\Factory as HttpFactory;
-use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -46,19 +44,8 @@ final class CashiPayServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerMiddleware();
         $this->registerRoutes();
         $this->registerPublishables();
-    }
-
-    /**
-     * Register the webhook signature verification middleware alias.
-     */
-    private function registerMiddleware(): void
-    {
-        /** @var Router $router */
-        $router = $this->app->make(Router::class);
-        $router->aliasMiddleware('cashipay.webhook', VerifyWebhookSignature::class);
     }
 
     /**

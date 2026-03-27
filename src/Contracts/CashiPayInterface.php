@@ -44,11 +44,6 @@ interface CashiPayInterface
     ): PaymentResponse;
 
     /**
-     * Verify the HMAC-SHA256 signature supplied in a webhook request.
-     */
-    public function verifyWebhookSignature(string $rawPayload, string $signature): bool;
-
-    /**
      * Determine whether the given status string represents a completed payment.
      */
     public function isCompletedStatus(?string $status): bool;

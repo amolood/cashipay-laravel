@@ -22,7 +22,6 @@ class InstallCommand extends Command
         $this->line('CASHIPAY_ENV=staging');
         $this->line('CASHIPAY_STAGING_KEY=your-staging-api-key');
         $this->line('CASHIPAY_PRODUCTION_KEY=your-production-api-key');
-        $this->line('CASHIPAY_WEBHOOK_SECRET=your-webhook-hmac-secret');
         $this->newLine();
 
         $laravelVersion = (int) app()->version();

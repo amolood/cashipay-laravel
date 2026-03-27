@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static PaymentResponse getPaymentStatus(string $referenceNumber)
  * @method static PaymentResponse cancelPaymentRequest(string $referenceNumber)
  * @method static PaymentResponse confirmOtp(string $referenceNumber, float $amount, string $otp, string $walletPhone)
- * @method static bool            verifyWebhookSignature(string $rawPayload, string $signature)
  * @method static bool            isCompletedStatus(?string $status)
  * @method static bool            isFailedStatus(?string $status)
  * @method static string          environment()

@@ -23,7 +23,6 @@ The install command publishes `config/cashipay.php` and prints exactly what to a
 CASHIPAY_ENV=staging
 CASHIPAY_STAGING_KEY=your-staging-api-key
 CASHIPAY_PRODUCTION_KEY=your-production-api-key
-CASHIPAY_WEBHOOK_SECRET=your-webhook-hmac-secret
 ```
 
 ### 3. Exclude webhook from CSRF
@@ -185,8 +184,6 @@ CashiPay::confirmOtp(string $ref, float $amount, string $otp, string $walletPhon
 
 The package auto-registers `POST /cashipay/webhook` (path configurable via `CASHIPAY_WEBHOOK_PATH`).
 
-Inbound signatures are verified automatically via `X-CashiPay-Signature` (HMAC-SHA256). Invalid signatures get a `401`. If `CASHIPAY_WEBHOOK_SECRET` is empty, verification is skipped (dev only).
-
 ### Events
 
 | Event | When |
@@ -241,12 +238,11 @@ Simulate a webhook:
 ```php
 Event::fake();
 
-$body      = json_encode(['referenceNumber' => 'REF-001', 'status' => 'COMPLETED', 'merchantOrderId' => 'ORD-1']);
-$signature = hash_hmac('sha256', $body, config('cashipay.webhook.secret'));
-
-$this->withHeaders(['X-CashiPay-Signature' => $signature])
-    ->postJson('/cashipay/webhook', json_decode($body, true))
-    ->assertOk();
+$this->postJson('/cashipay/webhook', [
+    'referenceNumber' => 'REF-001',
+    'status'          => 'COMPLETED',
+    'merchantOrderId' => 'ORD-1',
+])->assertOk();
 
 Event::assertDispatched(PaymentCompleted::class);
 ```
@@ -273,7 +269,6 @@ return [
     ],
 
     'webhook' => [
-        'secret'     => env('CASHIPAY_WEBHOOK_SECRET', null),
         'path'       => env('CASHIPAY_WEBHOOK_PATH', 'cashipay/webhook'),
         'middleware' => [],
     ],

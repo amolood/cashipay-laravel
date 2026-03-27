@@ -66,7 +66,6 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('cashipay.environment', 'staging');
         $app['config']->set('cashipay.environments.staging.base_url', 'https://stg-cashi-services.alsoug.com/cashipay');
         $app['config']->set('cashipay.environments.staging.api_key', 'test-staging-api-key');
-        $app['config']->set('cashipay.webhook.secret', 'test-webhook-secret');
         $app['config']->set('cashipay.webhook.path', 'cashipay/webhook');
         $app['config']->set('cashipay.currency', 'SDG');
         $app['config']->set('cashipay.timeout', 30);
