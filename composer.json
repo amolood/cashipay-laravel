@@ -1,0 +1,49 @@
+{
+    "name": "amolood/cashipay-laravel",
+    "description": "CashiPay wallet payment gateway integration for Laravel",
+    "keywords": ["laravel", "cashipay", "payment", "wallet", "gateway", "sudan"],
+    "homepage": "https://github.com/amolood/cashipay-laravel",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Digitalize Lab",
+            "email": "dev@digitalizelab.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/contracts": "^10.0|^11.0|^12.0",
+        "illuminate/http": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0|^10.0",
+        "phpunit/phpunit": "^10.0|^11.0",
+        "mockery/mockery": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "DigitalizeLab\\CashiPay\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DigitalizeLab\\CashiPay\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DigitalizeLab\\CashiPay\\CashiPayServiceProvider"
+            ],
+            "aliases": {
+                "CashiPay": "DigitalizeLab\\CashiPay\\CashiPayFacade"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
