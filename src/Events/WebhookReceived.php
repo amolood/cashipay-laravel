@@ -20,6 +20,7 @@ final class WebhookReceived
      * @param  array<string, mixed>  $payload  The fully decoded webhook body.
      */
     public function __construct(
+        public string $key,
         public array $payload,
     ) {
     }

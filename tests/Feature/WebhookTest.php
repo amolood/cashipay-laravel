@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Event;
 
 final class WebhookTest extends TestCase
 {
-    private const WEBHOOK_URL = '/cashipay/webhook';
+    private const WEBHOOK_URL = '/cashipay/webhook/test-key-001';
 
     // ------------------------------------------------------------------ //
     // PaymentCompleted event                                               //
@@ -35,11 +35,12 @@ final class WebhookTest extends TestCase
             ->assertJson(['received' => true]);
 
         Event::assertDispatched(WebhookReceived::class, function (WebhookReceived $e) use ($payload): bool {
-            return $e->payload === $payload;
+            return $e->key === 'test-key-001' && $e->payload === $payload;
         });
 
         Event::assertDispatched(PaymentCompleted::class, function (PaymentCompleted $e): bool {
-            return $e->referenceNumber === 'REF-001'
+            return $e->key === 'test-key-001'
+                && $e->referenceNumber === 'REF-001'
                 && $e->merchantOrderId === 'ORD-001';
         });
 
@@ -170,7 +171,7 @@ final class WebhookTest extends TestCase
     {
         Event::fake();
 
-        $this->post(self::WEBHOOK_URL, [], ['Content-Type' => 'application/json'])
+        $this->post('/cashipay/webhook/some-key', [], ['Content-Type' => 'application/json'])
             ->assertOk()
             ->assertJson(['received' => true]);
     }

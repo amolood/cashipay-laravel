@@ -30,37 +30,47 @@ CASHIPAY_PRODUCTION_KEY=your-production-api-key
 **Laravel 11+ (`bootstrap/app.php`):**
 ```php
 ->withMiddleware(function (Middleware $middleware) {
-    $middleware->validateCsrfTokens(except: ['cashipay/webhook']);
+    $middleware->validateCsrfTokens(except: ['cashipay/webhook/*']);
 })
 ```
 
 **Laravel 10 (`app/Http/Middleware/VerifyCsrfToken.php`):**
 ```php
-protected $except = ['cashipay/webhook'];
+protected $except = ['cashipay/webhook/*'];
 ```
 
 ### 4. Create a payment
 
+Each payment gets a unique key embedded in its webhook URL. Generate the key yourself (UUID, signed token, etc.) and pass it to `callbackUrl`:
+
 ```php
 use CashiPay;
+use Illuminate\Support\Str;
+
+$webhookKey = Str::uuid(); // or any unique token you generate
 
 $response = CashiPay::request()
     ->merchantOrderId('ORD-1001')
     ->amount(250.00)
     ->customerEmail('user@example.com')
-    ->callbackUrl(route('cashipay.webhook'))
+    ->callbackUrl(route('cashipay.webhook', ['key' => $webhookKey]))
     ->returnUrl(route('orders.show', 1001))
     ->send();
 
 if ($response->success) {
-    $reference = $response->referenceNumber;
-    $qrCode    = $response->qrDataUrl; // <img src="{{ $qrCode }}">
+    // Store the key so you can look up the order when the webhook arrives
+    $order->update([
+        'cashipay_reference' => $response->referenceNumber,
+        'cashipay_key'       => $webhookKey,
+    ]);
+
+    $qrCode = $response->qrDataUrl; // <img src="{{ $qrCode }}">
 }
 ```
 
 ### 5. Handle the webhook
 
-Register a listener for payment events:
+The key is available on every event — use it to find your order:
 
 ```php
 // app/Providers/AppServiceProvider.php
@@ -70,14 +80,18 @@ use DigitalizeLab\CashiPay\Events\PaymentFailed;
 public function boot(): void
 {
     Event::listen(PaymentCompleted::class, function ($event) {
+        // $event->key — your unique webhook key
         // $event->referenceNumber, $event->merchantOrderId, $event->payload
-        Order::where('cashipay_reference', $event->referenceNumber)
+        Order::where('cashipay_key', $event->key)
             ->first()
             ?->markAsPaid();
     });
 
     Event::listen(PaymentFailed::class, function ($event) {
-        // $event->referenceNumber, $event->reason, $event->payload
+        // $event->key, $event->referenceNumber, $event->reason, $event->payload
+        Order::where('cashipay_key', $event->key)
+            ->first()
+            ?->update(['payment_status' => 'failed']);
     });
 }
 ```
@@ -89,31 +103,38 @@ public function boot(): void
 ### QR Payment
 
 ```php
+$webhookKey = Str::uuid();
+
 $response = CashiPay::request()
     ->merchantOrderId('ORD-' . $order->id)
     ->amount($order->total)
     ->customerEmail($order->customer->email)
-    ->callbackUrl(route('cashipay.webhook'))
+    ->callbackUrl(route('cashipay.webhook', ['key' => $webhookKey]))
     ->returnUrl(route('orders.show', $order))
     ->send();
 
+// Store key + reference so you can match the webhook
+$order->update([
+    'cashipay_key'       => $webhookKey,
+    'cashipay_reference' => $response->referenceNumber,
+]);
+
 // Display QR code
 // <img src="{{ $response->qrDataUrl }}" width="250">
-
-// Store reference to match against webhook
-$order->update(['cashipay_reference' => $response->referenceNumber]);
 ```
 
 ### OTP Payment
 
 ```php
+$webhookKey = Str::uuid();
+
 // Step 1 — create request with wallet number
 $response = CashiPay::request()
     ->merchantOrderId('ORD-' . $order->id)
     ->amount($order->total)
     ->customerEmail($order->customer->email)
     ->walletAccountNumber($request->wallet_phone)
-    ->callbackUrl(route('cashipay.webhook'))
+    ->callbackUrl(route('cashipay.webhook', ['key' => $webhookKey]))
     ->returnUrl(route('orders.show', $order))
     ->send();
 
@@ -238,13 +259,15 @@ Simulate a webhook:
 ```php
 Event::fake();
 
-$this->postJson('/cashipay/webhook', [
+$this->postJson('/cashipay/webhook/my-test-key', [
     'referenceNumber' => 'REF-001',
     'status'          => 'COMPLETED',
     'merchantOrderId' => 'ORD-1',
 ])->assertOk();
 
-Event::assertDispatched(PaymentCompleted::class);
+Event::assertDispatched(PaymentCompleted::class, function ($e) {
+    return $e->key === 'my-test-key' && $e->referenceNumber === 'REF-001';
+});
 ```
 
 ---

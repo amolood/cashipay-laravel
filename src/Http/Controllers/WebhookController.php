@@ -43,13 +43,14 @@ final class WebhookController extends Controller
     /**
      * Process an inbound CashiPay webhook.
      */
-    public function handle(Request $request): JsonResponse
+    public function handle(Request $request, string $key): JsonResponse
     {
         /** @var array<string, mixed> $payload */
         $payload = $request->json()->all();
 
         if (empty($payload)) {
             Log::warning('[CashiPay] Received empty or non-JSON webhook payload.', [
+                'key'  => $key,
                 'body' => $request->getContent(),
             ]);
 
@@ -57,15 +58,16 @@ final class WebhookController extends Controller
         }
 
         Log::info('[CashiPay] Webhook received.', [
-            'event'  => $payload['event'] ?? 'unknown',
-            'ref'    => $payload['referenceNumber'] ?? $payload['reference_number'] ?? null,
+            'key'   => $key,
+            'event' => $payload['event'] ?? 'unknown',
+            'ref'   => $payload['referenceNumber'] ?? $payload['reference_number'] ?? null,
         ]);
 
         try {
             // Always dispatch the generic event first.
-            $this->events->dispatch(new WebhookReceived($payload));
+            $this->events->dispatch(new WebhookReceived($key, $payload));
 
-            $this->dispatchSpecificEvent($payload);
+            $this->dispatchSpecificEvent($key, $payload);
         } catch (Throwable $e) {
             Log::error('[CashiPay] Exception while dispatching webhook events.', [
                 'exception' => $e->getMessage(),
@@ -82,7 +84,7 @@ final class WebhookController extends Controller
      *
      * @param  array<string, mixed>  $payload
      */
-    private function dispatchSpecificEvent(array $payload): void
+    private function dispatchSpecificEvent(string $key, array $payload): void
     {
         $event = strtolower((string) ($payload['event'] ?? ''));
         $status = (string) ($payload['status'] ?? '');
@@ -104,6 +106,7 @@ final class WebhookController extends Controller
 
         if ($isCompleted) {
             $this->events->dispatch(new PaymentCompleted(
+                key: $key,
                 referenceNumber: $referenceNumber,
                 merchantOrderId: $merchantOrderId,
                 payload: $payload,
@@ -121,6 +124,7 @@ final class WebhookController extends Controller
             $reason = ucfirst($status ?: $event ?: 'Unknown');
 
             $this->events->dispatch(new PaymentFailed(
+                key: $key,
                 referenceNumber: $referenceNumber,
                 reason: $reason,
                 payload: $payload,

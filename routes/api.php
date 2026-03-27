@@ -6,7 +6,7 @@ use DigitalizeLab\CashiPay\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::post(
-    config('cashipay.webhook.path', 'cashipay/webhook'),
+    config('cashipay.webhook.path', 'cashipay/webhook') . '/{key}',
     [WebhookController::class, 'handle'],
 )
     ->middleware(config('cashipay.webhook.middleware', []))

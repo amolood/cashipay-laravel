@@ -19,6 +19,7 @@ final class PaymentCompleted
      * @param  array<string, mixed>  $payload  The fully decoded webhook body.
      */
     public function __construct(
+        public string $key,
         public string $referenceNumber,
         public string $merchantOrderId,
         public array $payload,
