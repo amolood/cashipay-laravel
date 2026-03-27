@@ -219,7 +219,7 @@ $request = PaymentRequest::make()
     ->description('Order #1001')    // optional — shown to the customer
     ->customerEmail('user@example.com') // required
     ->customerPhone('0912345678')   // optional — customer's phone number
-    ->walletAccountNumber('0912345678') // optional — wallet number for OTP flow
+    ->walletAccountNumber('20003333333') // optional — wallet number for OTP flow
     ->callbackUrl(route('cashipay.webhook')) // required — your webhook URL
     ->returnUrl(route('orders.show', 1001)) // required — redirect after payment
     ->metadata(['order_type' => 'subscription']); // optional — arbitrary key-value data
@@ -695,4 +695,4 @@ The MIT License (MIT). See [LICENSE](LICENSE) for details.
 
 ## Credits
 
-Built and maintained by [Digitalize Lab](https://github.com/digitalize-lab).
+Built and maintained by [Digitalize Lab](https://digitalize.sd)
