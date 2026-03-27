@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DigitalizeLab\CashiPay\Data;
 
 use InvalidArgumentException;
+use DigitalizeLab\CashiPay\Data\PaymentResponse;
 
 /**
  * Fluent builder for a CashiPay payment request payload.
@@ -119,6 +120,16 @@ final class PaymentRequest
         $this->metadata = $metadata;
 
         return $this;
+    }
+
+    /**
+     * Send this payment request immediately.
+     *
+     * Shortcut for: CashiPay::createPaymentRequest($this)
+     */
+    public function send(): PaymentResponse
+    {
+        return app('cashipay')->createPaymentRequest($this);
     }
 
     /**

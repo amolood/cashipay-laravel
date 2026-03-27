@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DigitalizeLab\CashiPay;
 
+use DigitalizeLab\CashiPay\Console\InstallCommand;
 use DigitalizeLab\CashiPay\Contracts\CashiPayInterface;
 use DigitalizeLab\CashiPay\Http\Middleware\VerifyWebhookSignature;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
@@ -90,6 +91,8 @@ final class CashiPayServiceProvider extends ServiceProvider
             ],
             groups: 'cashipay-config',
         );
+
+        $this->commands([InstallCommand::class]);
     }
 
     /**

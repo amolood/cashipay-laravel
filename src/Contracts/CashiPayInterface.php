@@ -10,6 +10,13 @@ use DigitalizeLab\CashiPay\Data\PaymentResponse;
 interface CashiPayInterface
 {
     /**
+     * Start building a payment request (fluent shortcut).
+     *
+     * Example: CashiPay::request()->amount(100)->...->send()
+     */
+    public function request(): PaymentRequest;
+
+    /**
      * Create a new payment request (QR or OTP).
      *
      * @param  array<string, mixed>|PaymentRequest  $payload

@@ -11,9 +11,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * CashiPay Facade.
  *
- * @method static string          environment()
- * @method static string          baseUrl()
- * @method static string          apiKey()
+ * @method static PaymentRequest  request()
  * @method static PaymentResponse createPaymentRequest(array|PaymentRequest $payload)
  * @method static PaymentResponse getPaymentStatus(string $referenceNumber)
  * @method static PaymentResponse cancelPaymentRequest(string $referenceNumber)
@@ -21,6 +19,9 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool            verifyWebhookSignature(string $rawPayload, string $signature)
  * @method static bool            isCompletedStatus(?string $status)
  * @method static bool            isFailedStatus(?string $status)
+ * @method static string          environment()
+ * @method static string          baseUrl()
+ * @method static string          apiKey()
  *
  * @see \DigitalizeLab\CashiPay\CashiPayManager
  */

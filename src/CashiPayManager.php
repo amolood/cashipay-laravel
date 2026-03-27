@@ -107,6 +107,14 @@ final class CashiPayManager implements CashiPayInterface
     /**
      * {@inheritDoc}
      */
+    public function request(): PaymentRequest
+    {
+        return PaymentRequest::make();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function createPaymentRequest(array|PaymentRequest $payload): PaymentResponse
     {
         $data = $payload instanceof PaymentRequest ? $payload->toArray() : $payload;
